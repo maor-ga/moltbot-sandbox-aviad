@@ -25,6 +25,13 @@ RUN npm install -g pnpm
 RUN npm install -g openclaw@2026.2.3 \
     && openclaw --version
 
+# Install gog CLI (Google Workspace: Gmail, Calendar, Drive, etc.)
+ENV GOG_VERSION=0.9.0
+RUN ARCH="$(dpkg --print-architecture)" \
+    && curl -fsSL https://github.com/steipete/gogcli/releases/download/v${GOG_VERSION}/gogcli_${GOG_VERSION}_linux_${ARCH}.tar.gz \
+       | tar xz -C /usr/local/bin gog \
+    && gog --version
+
 # Create OpenClaw directories
 # Legacy .clawdbot paths are kept for R2 backup migration
 RUN mkdir -p /root/.openclaw \
@@ -32,7 +39,7 @@ RUN mkdir -p /root/.openclaw \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-02-11-v30-google-workspace
+# Build cache bust: 2026-02-11-v31-gog-binary
 COPY start-openclaw.sh /usr/local/bin/start-openclaw.sh
 RUN chmod +x /usr/local/bin/start-openclaw.sh
 
