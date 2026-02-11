@@ -2,6 +2,7 @@ import type { Sandbox } from '@cloudflare/sandbox';
 import type { MoltbotEnv } from '../types';
 import { R2_MOUNT_PATH } from '../config';
 import { mountR2Storage } from './r2';
+import { findExistingMoltbotProcess } from './process';
 import { waitForProcess } from './utils';
 
 export interface SyncResult {
@@ -29,6 +30,54 @@ export interface SyncResult {
  * @param env - Worker environment bindings
  * @returns SyncResult with success status and optional error details
  */
+async function runDiagnosticCmd(sandbox: Sandbox, cmd: string): Promise<string> {
+  const proc = await sandbox.startProcess(cmd);
+  await waitForProcess(proc, 5000);
+  const logs = await proc.getLogs();
+  return (logs.stdout || '').trim();
+}
+
+async function diagnoseConfigMissing(sandbox: Sandbox): Promise<string> {
+  const parts: string[] = [];
+
+  const gateway = await findExistingMoltbotProcess(sandbox);
+  if (!gateway) {
+    parts.push('Gateway process is not running — config has not been created yet.');
+    return parts.join(' | ');
+  }
+
+  parts.push(`Gateway running (${gateway.id}, status: ${gateway.status})`);
+
+  try {
+    const localLs = await runDiagnosticCmd(sandbox, 'ls -la /root/.openclaw/ 2>&1');
+    parts.push(`Local /root/.openclaw/: ${localLs.slice(0, 300)}`);
+  } catch {
+    parts.push('Local /root/.openclaw/: failed to list');
+  }
+
+  try {
+    const r2Ls = await runDiagnosticCmd(
+      sandbox,
+      `ls -la ${R2_MOUNT_PATH}/openclaw/ 2>&1; echo "---"; ls -la ${R2_MOUNT_PATH}/clawdbot/ 2>&1`,
+    );
+    parts.push(`R2 backups: ${r2Ls.slice(0, 300)}`);
+  } catch {
+    parts.push('R2 backups: failed to list');
+  }
+
+  try {
+    const mountTest = await runDiagnosticCmd(
+      sandbox,
+      `cat ${R2_MOUNT_PATH}/.last-sync 2>&1 || echo "no .last-sync file"`,
+    );
+    parts.push(`R2 .last-sync: ${mountTest.slice(0, 100)}`);
+  } catch {
+    parts.push('R2 mount: unresponsive');
+  }
+
+  return parts.join(' | ');
+}
+
 export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncResult> {
   // Check if R2 is configured
   if (!env.R2_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY || !env.CF_ACCOUNT_ID) {
@@ -41,23 +90,32 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
     return { success: false, error: 'Failed to mount R2 storage' };
   }
 
-  // Determine which config directory exists
-  // Check new path first, fall back to legacy
-  // Use exit code (0 = exists) rather than stdout parsing to avoid log-flush races
+  // Determine which config directory has content worth backing up.
+  // Uses stdout-based detection (ls output) instead of exitCode, because the
+  // sandbox API sometimes returns null for exitCode even on success (#212).
   let configDir = '/root/.openclaw';
   try {
-    const checkNew = await sandbox.startProcess('test -f /root/.openclaw/openclaw.json');
+    const checkNew = await sandbox.startProcess('ls -A /root/.openclaw/ 2>/dev/null | head -1');
     await waitForProcess(checkNew, 5000);
-    if (checkNew.exitCode !== 0) {
-      const checkLegacy = await sandbox.startProcess('test -f /root/.clawdbot/clawdbot.json');
+    const checkNewLogs = await checkNew.getLogs();
+    const hasNewContent = (checkNewLogs.stdout || '').trim().length > 0;
+
+    if (!hasNewContent) {
+      const checkLegacy = await sandbox.startProcess(
+        'ls -A /root/.clawdbot/ 2>/dev/null | head -1',
+      );
       await waitForProcess(checkLegacy, 5000);
-      if (checkLegacy.exitCode === 0) {
+      const checkLegacyLogs = await checkLegacy.getLogs();
+      const hasLegacyContent = (checkLegacyLogs.stdout || '').trim().length > 0;
+
+      if (hasLegacyContent) {
         configDir = '/root/.clawdbot';
       } else {
+        const diagnostics = await diagnoseConfigMissing(sandbox);
         return {
           success: false,
-          error: 'Sync aborted: no config file found',
-          details: 'Neither openclaw.json nor clawdbot.json found in config directory.',
+          error: 'Sync aborted: no config data found',
+          details: diagnostics,
         };
       }
     }
