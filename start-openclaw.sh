@@ -285,6 +285,24 @@ console.log('Configuration patched successfully');
 EOFPATCH
 
 # ============================================================
+# GOOGLE WORKSPACE (gog skill)
+# ============================================================
+if [ -n "$GOOGLE_OAUTH_CREDENTIALS_JSON" ]; then
+    GOOGLE_CREDS_PATH="$CONFIG_DIR/google-credentials.json"
+    echo "Writing Google OAuth credentials to $GOOGLE_CREDS_PATH"
+    echo "$GOOGLE_OAUTH_CREDENTIALS_JSON" > "$GOOGLE_CREDS_PATH"
+    export GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_CREDS_PATH"
+
+    # Install gog skill if not already installed (may exist from R2 restore)
+    if [ ! -d "/root/clawd/skills/gog" ]; then
+        echo "Installing gog skill (Google Workspace)..."
+        clawdhub install gog || echo "Warning: Failed to install gog skill"
+    else
+        echo "gog skill already installed"
+    fi
+fi
+
+# ============================================================
 # START GATEWAY
 # ============================================================
 echo "Starting OpenClaw Gateway..."

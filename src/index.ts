@@ -18,6 +18,7 @@
  * - TELEGRAM_BOT_TOKEN: Telegram bot token
  * - DISCORD_BOT_TOKEN: Discord bot token
  * - SLACK_BOT_TOKEN + SLACK_APP_TOKEN: Slack tokens
+ * - GOOGLE_OAUTH_CREDENTIALS_JSON: Google OAuth credentials for gog skill
  */
 
 import { Hono } from 'hono';

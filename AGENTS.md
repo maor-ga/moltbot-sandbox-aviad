@@ -206,6 +206,7 @@ These are the env vars passed TO the container (internal names):
 | `DISCORD_BOT_TOKEN` | `channels.discord.token` | |
 | `SLACK_BOT_TOKEN` | `channels.slack.botToken` | |
 | `SLACK_APP_TOKEN` | `channels.slack.appToken` | |
+| `GOOGLE_OAUTH_CREDENTIALS_JSON` | Written to file + `GOOGLE_APPLICATION_CREDENTIALS` set | Also installs `gog` skill |
 
 ## OpenClaw Config Schema
 

@@ -286,6 +286,26 @@ npx wrangler secret put SLACK_APP_TOKEN
 npm run deploy
 ```
 
+### Google Workspace (Gmail, Calendar, Drive)
+
+OpenClaw supports Google Workspace integration via the `gog` skill.
+
+1. Create OAuth client credentials in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (Desktop app type)
+2. Download the credentials JSON and set it as a secret:
+
+```bash
+npx wrangler secret put GOOGLE_OAUTH_CREDENTIALS_JSON
+# Paste the entire JSON content from the downloaded credentials file
+```
+
+3. Deploy:
+
+```bash
+npm run deploy
+```
+
+4. Run `gog auth` once in the OpenClaw chat to complete the OAuth browser flow (this is interactive and cannot be automated).
+
 ## Optional: Browser Automation (CDP)
 
 This worker includes a Chrome DevTools Protocol (CDP) shim that enables browser automation capabilities. This allows OpenClaw to control a headless browser for tasks like web scraping, screenshots, and automated testing.
@@ -436,6 +456,7 @@ The previous `AI_GATEWAY_API_KEY` + `AI_GATEWAY_BASE_URL` approach is still supp
 | `DISCORD_DM_POLICY` | No | Discord DM policy: `pairing` (default) or `open` |
 | `SLACK_BOT_TOKEN` | No | Slack bot token |
 | `SLACK_APP_TOKEN` | No | Slack app token |
+| `GOOGLE_OAUTH_CREDENTIALS_JSON` | No | Google OAuth client credentials JSON for `gog` skill (Google Workspace) |
 | `CDP_SECRET` | No | Shared secret for CDP endpoint authentication (see [Browser Automation](#optional-browser-automation-cdp)) |
 | `WORKER_URL` | No | Public URL of the worker (required for CDP) |
 

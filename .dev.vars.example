@@ -37,6 +37,9 @@ MOLTBOT_GATEWAY_TOKEN=dev-token-change-in-prod
 # TELEGRAM_BOT_TOKEN=optional
 # DISCORD_BOT_TOKEN=optional
 
+# Google Workspace (gog skill) - paste your OAuth client credentials JSON
+# GOOGLE_OAUTH_CREDENTIALS_JSON={"installed":{"client_id":"...","client_secret":"...",...}}
+
 # CDP (Chrome DevTools Protocol) configuration for browser automation
 # CDP_SECRET=shared-secret-for-cdp-auth
 # WORKER_URL=https://your-worker.example.com
