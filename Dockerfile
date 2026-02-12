@@ -32,6 +32,13 @@ RUN ARCH="$(dpkg --print-architecture)" \
        | tar xz -C /usr/local/bin gog \
     && gog --version
 
+# Install goplaces CLI (Google Places API search)
+ENV GOPLACES_VERSION=0.2.1
+RUN ARCH="$(dpkg --print-architecture)" \
+    && curl -fsSL https://github.com/steipete/goplaces/releases/download/v${GOPLACES_VERSION}/goplaces_${GOPLACES_VERSION}_linux_${ARCH}.tar.gz \
+       | tar xz -C /usr/local/bin goplaces \
+    && goplaces --version
+
 # Create OpenClaw directories
 # Legacy .clawdbot paths are kept for R2 backup migration
 RUN mkdir -p /root/.openclaw \
@@ -39,7 +46,7 @@ RUN mkdir -p /root/.openclaw \
     && mkdir -p /root/clawd/skills
 
 # Copy startup script
-# Build cache bust: 2026-02-11-v33-dotconfig-sync
+# Build cache bust: 2026-02-12-v34-goplaces
 COPY start-openclaw.sh /usr/local/bin/start-openclaw.sh
 RUN chmod +x /usr/local/bin/start-openclaw.sh
 

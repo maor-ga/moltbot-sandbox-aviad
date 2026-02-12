@@ -40,6 +40,9 @@ MOLTBOT_GATEWAY_TOKEN=dev-token-change-in-prod
 # Google Workspace (gog skill) - paste your OAuth client credentials JSON
 # GOOGLE_OAUTH_CREDENTIALS_JSON={"installed":{"client_id":"...","client_secret":"...",...}}
 
+# Google Places API (goplaces skill)
+# GOOGLE_PLACES_API_KEY=your-google-places-api-key
+
 # CDP (Chrome DevTools Protocol) configuration for browser automation
 # CDP_SECRET=shared-secret-for-cdp-auth
 # WORKER_URL=https://your-worker.example.com

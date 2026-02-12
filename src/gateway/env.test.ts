@@ -151,6 +151,12 @@ describe('buildEnvVars', () => {
     expect(result.GOOGLE_OAUTH_CREDENTIALS_JSON).toBe(creds);
   });
 
+  it('passes GOOGLE_PLACES_API_KEY to container', () => {
+    const env = createMockEnv({ GOOGLE_PLACES_API_KEY: 'places-key-123' });
+    const result = buildEnvVars(env);
+    expect(result.GOOGLE_PLACES_API_KEY).toBe('places-key-123');
+  });
+
   it('combines all env vars correctly', () => {
     const env = createMockEnv({
       ANTHROPIC_API_KEY: 'sk-key',
