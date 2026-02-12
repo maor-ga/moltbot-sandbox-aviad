@@ -288,18 +288,20 @@ EOFPATCH
 # GOOGLE WORKSPACE (gog skill)
 # ============================================================
 if [ -n "$GOOGLE_OAUTH_CREDENTIALS_JSON" ]; then
-    GOOGLE_CREDS_PATH="$CONFIG_DIR/google-credentials.json"
+    GOOGLE_CREDS_PATH="/tmp/google-credentials.json"
     echo "Writing Google OAuth credentials to $GOOGLE_CREDS_PATH"
     echo "$GOOGLE_OAUTH_CREDENTIALS_JSON" > "$GOOGLE_CREDS_PATH"
-    export GOOGLE_APPLICATION_CREDENTIALS="$GOOGLE_CREDS_PATH"
 
-    # Install gog skill if not already installed (may exist from R2 restore)
-    if [ ! -d "/root/clawd/skills/gog" ]; then
-        echo "Installing gog skill (Google Workspace)..."
-        clawdhub install gog || echo "Warning: Failed to install gog skill"
-    else
-        echo "gog skill already installed"
+    # Configure gog CLI: set file-based keyring (no system keychain in container)
+    # and register the OAuth client credentials
+    GOG_CONFIG_DIR="/root/.config/gogcli"
+    mkdir -p "$GOG_CONFIG_DIR"
+    if [ ! -f "$GOG_CONFIG_DIR/config.json" ]; then
+        echo '{"keyring_backend":"file"}' > "$GOG_CONFIG_DIR/config.json"
+        echo "Created gog config with file-based keyring"
     fi
+    gog auth credentials "$GOOGLE_CREDS_PATH" || echo "Warning: Failed to register gog credentials"
+    rm -f "$GOOGLE_CREDS_PATH"
 fi
 
 # ============================================================
