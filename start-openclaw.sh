@@ -118,6 +118,17 @@ if [ -d "$BACKUP_DIR/skills" ] && [ "$(ls -A $BACKUP_DIR/skills 2>/dev/null)" ];
     fi
 fi
 
+# Restore dotconfig from R2 backup if available (gogcli tokens, etc.)
+DOTCONFIG_DIR="/root/.config"
+if [ -d "$BACKUP_DIR/dotconfig" ] && [ "$(ls -A $BACKUP_DIR/dotconfig 2>/dev/null)" ]; then
+    if should_restore_from_r2; then
+        echo "Restoring dotconfig from $BACKUP_DIR/dotconfig..."
+        mkdir -p "$DOTCONFIG_DIR"
+        cp -a "$BACKUP_DIR/dotconfig/." "$DOTCONFIG_DIR/"
+        echo "Restored dotconfig from R2 backup"
+    fi
+fi
+
 # ============================================================
 # ONBOARD (only if no config exists yet)
 # ============================================================
