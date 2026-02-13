@@ -39,6 +39,7 @@ export interface MoltbotEnv {
   R2_ACCESS_KEY_ID?: string;
   R2_SECRET_ACCESS_KEY?: string;
   R2_BUCKET_NAME?: string; // Override bucket name (default: 'moltbot-data')
+  R2_DATA_PREFIX?: string; // Optional prefix for agent data within shared R2 bucket (e.g., 'maor')
   CF_ACCOUNT_ID?: string; // Cloudflare account ID for R2 endpoint
   // Browser Rendering binding for CDP shim
   BROWSER?: Fetcher;

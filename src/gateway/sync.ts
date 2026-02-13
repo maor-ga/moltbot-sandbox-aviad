@@ -1,6 +1,6 @@
 import type { Sandbox } from '@cloudflare/sandbox';
 import type { MoltbotEnv } from '../types';
-import { R2_MOUNT_PATH } from '../config';
+import { R2_MOUNT_PATH, getR2DataPath } from '../config';
 import { mountR2Storage } from './r2';
 import { findExistingMoltbotProcess } from './process';
 import { waitForProcess } from './utils';
@@ -38,7 +38,7 @@ async function runDiagnosticCmd(sandbox: Sandbox, cmd: string): Promise<string> 
   return (logs.stdout || '').trim();
 }
 
-async function diagnoseConfigMissing(sandbox: Sandbox): Promise<string> {
+async function diagnoseConfigMissing(sandbox: Sandbox, env: MoltbotEnv): Promise<string> {
   const parts: string[] = [];
 
   const gateway = await findExistingMoltbotProcess(sandbox);
@@ -56,10 +56,12 @@ async function diagnoseConfigMissing(sandbox: Sandbox): Promise<string> {
     parts.push('Local /root/.openclaw/: failed to list');
   }
 
+  const dataPath = getR2DataPath(env);
+
   try {
     const r2Ls = await runDiagnosticCmd(
       sandbox,
-      `ls -la ${R2_MOUNT_PATH}/openclaw/ 2>&1; echo "---"; ls -la ${R2_MOUNT_PATH}/clawdbot/ 2>&1`,
+      `ls -la ${dataPath}/openclaw/ 2>&1; echo "---"; ls -la ${dataPath}/clawdbot/ 2>&1`,
     );
     parts.push(`R2 backups: ${r2Ls.slice(0, 300)}`);
   } catch {
@@ -69,7 +71,7 @@ async function diagnoseConfigMissing(sandbox: Sandbox): Promise<string> {
   try {
     const mountTest = await runDiagnosticCmd(
       sandbox,
-      `cat ${R2_MOUNT_PATH}/.last-sync 2>&1 || echo "no .last-sync file"`,
+      `cat ${dataPath}/.last-sync 2>&1 || echo "no .last-sync file"`,
     );
     parts.push(`R2 .last-sync: ${mountTest.slice(0, 100)}`);
   } catch {
@@ -112,7 +114,7 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
       if (hasLegacyContent) {
         configDir = '/root/.clawdbot';
       } else {
-        const diagnostics = await diagnoseConfigMissing(sandbox);
+        const diagnostics = await diagnoseConfigMissing(sandbox, env);
         return {
           success: false,
           error: 'Sync aborted: no config data found',
@@ -130,14 +132,15 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
 
   // Sync to the new openclaw/ R2 prefix (even if source is legacy .clawdbot)
   // Also sync workspace directory (excluding skills since they're synced separately)
-  const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${R2_MOUNT_PATH}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${R2_MOUNT_PATH}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${R2_MOUNT_PATH}/skills/ && rsync -r --no-times /root/.config/ ${R2_MOUNT_PATH}/dotconfig/ && date -Iseconds > ${R2_MOUNT_PATH}/.last-sync`;
+  const dataPath = getR2DataPath(env);
+  const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${dataPath}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${dataPath}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${dataPath}/skills/ && rsync -r --no-times /root/.config/ ${dataPath}/dotconfig/ && date -Iseconds > ${dataPath}/.last-sync`;
 
   try {
     const proc = await sandbox.startProcess(syncCmd);
     await waitForProcess(proc, 30000); // 30 second timeout for sync
 
     // Check for success by reading the timestamp file
-    const timestampProc = await sandbox.startProcess(`cat ${R2_MOUNT_PATH}/.last-sync`);
+    const timestampProc = await sandbox.startProcess(`cat ${dataPath}/.last-sync`);
     await waitForProcess(timestampProc, 5000);
     const timestampLogs = await timestampProc.getLogs();
     const lastSync = timestampLogs.stdout?.trim();

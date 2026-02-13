@@ -134,5 +134,31 @@ describe('syncToR2', () => {
       expect(rsyncCall).toContain('/root/.openclaw/');
       expect(rsyncCall).toContain('/data/moltbot/openclaw/');
     });
+
+    it('uses prefixed data path when R2_DATA_PREFIX is set', async () => {
+      const { sandbox, startProcessMock } = createMockSandbox();
+      const timestamp = '2026-02-13T12:00:00+00:00';
+
+      startProcessMock
+        .mockResolvedValueOnce(createMockProcess('s3fs on /data/moltbot type fuse.s3fs\n'))
+        .mockResolvedValueOnce(createMockProcess('openclaw.json\n'))
+        .mockResolvedValueOnce(createMockProcess(''))
+        .mockResolvedValueOnce(createMockProcess(timestamp));
+
+      const env = { ...createMockEnvWithR2(), R2_DATA_PREFIX: 'maor' };
+
+      const result = await syncToR2(sandbox, env);
+
+      expect(result.success).toBe(true);
+
+      // Rsync should target the prefixed path
+      const rsyncCall = startProcessMock.mock.calls[2][0];
+      expect(rsyncCall).toContain('/data/moltbot/maor/openclaw/');
+      expect(rsyncCall).not.toContain('/data/moltbot/openclaw/');
+
+      // Timestamp check should also use prefixed path
+      const timestampCall = startProcessMock.mock.calls[3][0];
+      expect(timestampCall).toContain('/data/moltbot/maor/.last-sync');
+    });
   });
 });
