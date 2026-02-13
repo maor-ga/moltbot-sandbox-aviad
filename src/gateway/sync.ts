@@ -133,7 +133,17 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
   // Sync to the new openclaw/ R2 prefix (even if source is legacy .clawdbot)
   // Also sync workspace directory (excluding skills since they're synced separately)
   const dataPath = getR2DataPath(env);
-  const syncCmd = `mkdir -p ${dataPath}/openclaw ${dataPath}/workspace ${dataPath}/skills ${dataPath}/dotconfig && rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${dataPath}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${dataPath}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${dataPath}/skills/ && rsync -r --no-times /root/.config/ ${dataPath}/dotconfig/ && date -Iseconds > ${dataPath}/.last-sync`;
+  // Each rsync runs independently (separated by ;) so a missing source dir
+  // (e.g., /root/clawd/skills/) doesn't block the rest of the sync.
+  // The config rsync is the essential one; workspace/skills/dotconfig are best-effort.
+  const syncCmd = [
+    `mkdir -p ${dataPath}/openclaw ${dataPath}/workspace ${dataPath}/skills ${dataPath}/dotconfig`,
+    `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${dataPath}/openclaw/`,
+    `rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${dataPath}/workspace/ 2>/dev/null`,
+    `rsync -r --no-times --delete /root/clawd/skills/ ${dataPath}/skills/ 2>/dev/null`,
+    `rsync -r --no-times /root/.config/ ${dataPath}/dotconfig/ 2>/dev/null`,
+    `date -Iseconds > ${dataPath}/.last-sync`,
+  ].join('; ');
 
   try {
     const proc = await sandbox.startProcess(syncCmd);
