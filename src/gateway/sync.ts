@@ -133,7 +133,7 @@ export async function syncToR2(sandbox: Sandbox, env: MoltbotEnv): Promise<SyncR
   // Sync to the new openclaw/ R2 prefix (even if source is legacy .clawdbot)
   // Also sync workspace directory (excluding skills since they're synced separately)
   const dataPath = getR2DataPath(env);
-  const syncCmd = `rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${dataPath}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${dataPath}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${dataPath}/skills/ && rsync -r --no-times /root/.config/ ${dataPath}/dotconfig/ && date -Iseconds > ${dataPath}/.last-sync`;
+  const syncCmd = `mkdir -p ${dataPath}/openclaw ${dataPath}/workspace ${dataPath}/skills ${dataPath}/dotconfig && rsync -r --no-times --delete --exclude='*.lock' --exclude='*.log' --exclude='*.tmp' ${configDir}/ ${dataPath}/openclaw/ && rsync -r --no-times --delete --exclude='skills' /root/clawd/ ${dataPath}/workspace/ && rsync -r --no-times --delete /root/clawd/skills/ ${dataPath}/skills/ && rsync -r --no-times /root/.config/ ${dataPath}/dotconfig/ && date -Iseconds > ${dataPath}/.last-sync`;
 
   try {
     const proc = await sandbox.startProcess(syncCmd);
