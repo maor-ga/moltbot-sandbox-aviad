@@ -326,10 +326,16 @@ rm -f "$CONFIG_DIR/gateway.lock" 2>/dev/null || true
 
 echo "Dev mode: ${OPENCLAW_DEV_MODE:-false}"
 
+VERBOSE_FLAG=""
+if [ "$OPENCLAW_VERBOSE" = "true" ] || [ "$OPENCLAW_VERBOSE" = "1" ]; then
+    VERBOSE_FLAG="--verbose"
+fi
+echo "Verbose logging: ${OPENCLAW_VERBOSE:-false}"
+
 if [ -n "$OPENCLAW_GATEWAY_TOKEN" ]; then
     echo "Starting gateway with token auth..."
-    exec openclaw gateway --port 18789 --verbose --allow-unconfigured --bind lan --token "$OPENCLAW_GATEWAY_TOKEN"
+    exec openclaw gateway --port 18789 $VERBOSE_FLAG --allow-unconfigured --bind lan --token "$OPENCLAW_GATEWAY_TOKEN"
 else
     echo "Starting gateway with device pairing (no token)..."
-    exec openclaw gateway --port 18789 --verbose --allow-unconfigured --bind lan
+    exec openclaw gateway --port 18789 $VERBOSE_FLAG --allow-unconfigured --bind lan
 fi

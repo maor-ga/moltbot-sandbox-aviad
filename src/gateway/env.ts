@@ -54,6 +54,7 @@ export function buildEnvVars(env: MoltbotEnv): Record<string, string> {
   if (env.CDP_SECRET) envVars.CDP_SECRET = env.CDP_SECRET;
   if (env.WORKER_URL) envVars.WORKER_URL = env.WORKER_URL;
   if (env.R2_DATA_PREFIX) envVars.R2_DATA_PREFIX = env.R2_DATA_PREFIX;
+  if (env.OPENCLAW_VERBOSE) envVars.OPENCLAW_VERBOSE = env.OPENCLAW_VERBOSE;
 
   return envVars;
 }

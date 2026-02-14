@@ -151,6 +151,12 @@ describe('buildEnvVars', () => {
     expect(result.GOOGLE_OAUTH_CREDENTIALS_JSON).toBe(creds);
   });
 
+  it('passes OPENCLAW_VERBOSE to container', () => {
+    const env = createMockEnv({ OPENCLAW_VERBOSE: 'true' });
+    const result = buildEnvVars(env);
+    expect(result.OPENCLAW_VERBOSE).toBe('true');
+  });
+
   it('passes GOOGLE_PLACES_API_KEY to container', () => {
     const env = createMockEnv({ GOOGLE_PLACES_API_KEY: 'places-key-123' });
     const result = buildEnvVars(env);
