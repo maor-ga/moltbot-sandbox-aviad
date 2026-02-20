@@ -2,6 +2,15 @@ import type { Sandbox } from '@cloudflare/sandbox';
 import type { MoltbotEnv } from '../types';
 import { R2_MOUNT_PATH, getR2BucketName } from '../config';
 
+interface MountBucketOptions {
+  endpoint: string;
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
+  prefix?: string;
+}
+
 /**
  * Check if R2 is already mounted by looking at the mount table
  */
@@ -50,15 +59,22 @@ export async function mountR2Storage(sandbox: Sandbox, env: MoltbotEnv): Promise
 
   const bucketName = getR2BucketName(env);
   try {
-    console.log('Mounting R2 bucket', bucketName, 'at', R2_MOUNT_PATH);
-    await sandbox.mountBucket(bucketName, R2_MOUNT_PATH, {
+    const mountOptions: MountBucketOptions = {
       endpoint: `https://${env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com`,
       // Pass credentials explicitly since we use R2_* naming instead of AWS_*
       credentials: {
         accessKeyId: env.R2_ACCESS_KEY_ID,
         secretAccessKey: env.R2_SECRET_ACCESS_KEY,
       },
-    });
+    };
+
+    // Scope the mount to this agent's prefix for per-customer R2 isolation
+    if (env.R2_DATA_PREFIX) {
+      mountOptions.prefix = `/${env.R2_DATA_PREFIX}`;
+    }
+
+    console.log('Mounting R2 bucket', bucketName, 'at', R2_MOUNT_PATH, 'prefix:', env.R2_DATA_PREFIX || '(none)');
+    await sandbox.mountBucket(bucketName, R2_MOUNT_PATH, mountOptions);
     console.log('R2 bucket mounted successfully - moltbot data will persist across sessions');
     return true;
   } catch (err) {

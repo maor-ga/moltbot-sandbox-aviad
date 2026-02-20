@@ -15,10 +15,11 @@ fi
 
 CONFIG_DIR="/root/.openclaw"
 CONFIG_FILE="$CONFIG_DIR/openclaw.json"
-BACKUP_DIR="/data/moltbot${R2_DATA_PREFIX:+/$R2_DATA_PREFIX}"
+BACKUP_DIR="/data/moltbot"
 
 echo "Config directory: $CONFIG_DIR"
 echo "Backup directory: $BACKUP_DIR"
+echo "R2 data prefix: ${R2_DATA_PREFIX:-(none)}"
 
 mkdir -p "$CONFIG_DIR"
 

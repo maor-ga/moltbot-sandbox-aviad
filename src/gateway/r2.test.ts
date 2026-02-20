@@ -84,6 +84,43 @@ describe('mountR2Storage', () => {
       });
     });
 
+    it('passes prefix option when R2_DATA_PREFIX is set', async () => {
+      const { sandbox, mountBucketMock } = createMockSandbox({ mounted: false });
+      const env = createMockEnvWithR2({
+        R2_ACCESS_KEY_ID: 'key123',
+        R2_SECRET_ACCESS_KEY: 'secret',
+        CF_ACCOUNT_ID: 'account123',
+        R2_DATA_PREFIX: 'maor',
+      });
+
+      const result = await mountR2Storage(sandbox, env);
+
+      expect(result).toBe(true);
+      expect(mountBucketMock).toHaveBeenCalledWith('moltbot-data', '/data/moltbot', {
+        endpoint: 'https://account123.r2.cloudflarestorage.com',
+        credentials: {
+          accessKeyId: 'key123',
+          secretAccessKey: 'secret',
+        },
+        prefix: '/maor',
+      });
+    });
+
+    it('does not include prefix option when R2_DATA_PREFIX is not set', async () => {
+      const { sandbox, mountBucketMock } = createMockSandbox({ mounted: false });
+      const env = createMockEnvWithR2({
+        R2_ACCESS_KEY_ID: 'key123',
+        R2_SECRET_ACCESS_KEY: 'secret',
+        CF_ACCOUNT_ID: 'account123',
+      });
+
+      const result = await mountR2Storage(sandbox, env);
+
+      expect(result).toBe(true);
+      const mountOptions = mountBucketMock.mock.calls[0][2];
+      expect(mountOptions).not.toHaveProperty('prefix');
+    });
+
     it('uses custom bucket name from R2_BUCKET_NAME env var', async () => {
       const { sandbox, mountBucketMock } = createMockSandbox({ mounted: false });
       const env = createMockEnvWithR2({

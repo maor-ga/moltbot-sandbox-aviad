@@ -7,6 +7,10 @@
   "observability": {
     "enabled": true,
   },
+  // Agent data prefix — namespaces this agent's data within the shared R2 bucket
+  "vars": {
+    "R2_DATA_PREFIX": "aviad",
+  },
   // Static assets for admin UI (built by vite)
   "assets": {
     "directory": "./dist/client",

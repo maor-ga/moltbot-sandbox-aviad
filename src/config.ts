@@ -20,13 +20,10 @@ export function getR2BucketName(env?: { R2_BUCKET_NAME?: string }): string {
 }
 
 /**
- * Get the data path within R2 mount, optionally namespaced by prefix.
- * When R2_DATA_PREFIX is set, data is stored under a subdirectory (e.g., /data/moltbot/maor).
- * This allows multiple agents to share the same R2 bucket.
+ * Get the data path within R2 mount.
+ * Always returns R2_MOUNT_PATH because per-customer isolation is now handled
+ * at the mount level via the `prefix` option in mountBucket.
  */
-export function getR2DataPath(env?: { R2_DATA_PREFIX?: string }): string {
-  if (env?.R2_DATA_PREFIX) {
-    return `${R2_MOUNT_PATH}/${env.R2_DATA_PREFIX}`;
-  }
+export function getR2DataPath(_env?: { R2_DATA_PREFIX?: string }): string {
   return R2_MOUNT_PATH;
 }

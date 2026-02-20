@@ -135,7 +135,7 @@ describe('syncToR2', () => {
       expect(rsyncCall).toContain('/data/moltbot/openclaw/');
     });
 
-    it('uses prefixed data path when R2_DATA_PREFIX is set', async () => {
+    it('uses base data path even when R2_DATA_PREFIX is set (prefix at mount level)', async () => {
       const { sandbox, startProcessMock } = createMockSandbox();
       const timestamp = '2026-02-13T12:00:00+00:00';
 
@@ -151,14 +151,14 @@ describe('syncToR2', () => {
 
       expect(result.success).toBe(true);
 
-      // Rsync should target the prefixed path
+      // Rsync should target the base path (prefix is handled at mount level)
       const rsyncCall = startProcessMock.mock.calls[2][0];
-      expect(rsyncCall).toContain('/data/moltbot/maor/openclaw/');
-      expect(rsyncCall).not.toContain('/data/moltbot/openclaw/');
+      expect(rsyncCall).toContain('/data/moltbot/openclaw/');
+      expect(rsyncCall).not.toContain('/data/moltbot/maor/');
 
-      // Timestamp check should also use prefixed path
+      // Timestamp check should also use base path
       const timestampCall = startProcessMock.mock.calls[3][0];
-      expect(timestampCall).toContain('/data/moltbot/maor/.last-sync');
+      expect(timestampCall).toContain('/data/moltbot/.last-sync');
     });
   });
 });

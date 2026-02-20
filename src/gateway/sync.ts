@@ -1,6 +1,6 @@
 import type { Sandbox } from '@cloudflare/sandbox';
 import type { MoltbotEnv } from '../types';
-import { R2_MOUNT_PATH, getR2DataPath } from '../config';
+import { getR2DataPath } from '../config';
 import { mountR2Storage } from './r2';
 import { findExistingMoltbotProcess } from './process';
 import { waitForProcess } from './utils';
